@@ -1,0 +1,25 @@
+# Linear Dimensionality Reduction (PCA)
+P15_integrated <- RunPCA(P15_integrated, features = VariableFeatures(object = P15_integrated))
+
+# Visualize PCA results
+print(P15_integrated[["pca"]], dims = 1:5, nfeatures = 5)
+DimHeatmap(P15_integrated, dims = 1, cells = 500, balanced = TRUE) #PC_1
+
+# Determine the dimensionality of the data
+ElbowPlot(P15_integrated) #consider first 15 PCS
+
+# Clustering
+P15_integrated <- FindNeighbors(P15_integrated, dims = 1:15, reduction = "pca") #first 15 PCs
+
+# Exploring and understanding clustering resolution
+P15_integrated <- FindClusters(P15_integrated, resolution = 0.6) #try different values
+View(P15_integrated@meta.data)
+
+DimPlot(P15_integrated, group.by = "integrated_snn_res.0.6", label = TRUE)
+
+# Setting the identity of clusters
+Idents(P15_integrated) <- "integrated_snn_res.0.6"
+Idents(P15_integrated)
+
+# Non-linear dimensionality reduction
+P15_integrated <- RunUMAP(P15_integrated, reduction = "pca", dims = 1:15)
