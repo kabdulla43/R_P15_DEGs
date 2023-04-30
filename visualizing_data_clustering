@@ -1,0 +1,18 @@
+# Visualize UMAP clustering
+P15_UMAP_plot1 <- DimPlot(P15_integrated, reduction = "umap", group.by = "Fi-nalIdents", label = TRUE)+
+  NoLegend()
+
+P15_UMAP_plot1 + ggtitle("Clustering of P15 Optic Lobe Cells") +
+  theme(plot.title = element_text(size=30))
+
+#Visualize Tm/TmY UMAP clustering
+Tm <- WhichCells(P15_integrated, idents = c(34,55,61,104,118,125,126,140,227,228))
+TmY <- WhichCells(P15_integrated, idents = c(42,70,119,159))
+P15_UMAP_plot2 <- DimPlot(P15_integrated, reduction = "umap", group.by = "Fi-nalIdents", cells.highlight = list(Tm, TmY),
+                    label = TRUE)+
+  scale_color_manual(labels = c("Other cells", "Tm neurons", "TmY neurons"), values = c("grey", "#20b2aa", "#f28ac6"))+
+  labs(color = "Cluster type")
+
+print(P15_UMAP_plot2) + ggtitle("Clustering of Tm and TmY Neurons in P15 Optic Lobe Cells") +
+  theme(plot.title = element_text(size=30)) + 
+  theme(plot.title = element_text(hjust = 2))
