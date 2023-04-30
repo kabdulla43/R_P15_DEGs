@@ -1,0 +1,67 @@
+# Setting working directory
+setwd("C:/Users/kabdu/Desktop/02. Transcriptome")
+
+# Install required packages
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+BiocManager::install(version = "3.14") #version might need to be changed depending on device
+
+BiocManager::install(c('BiocGenerics', 'DelayedArray', 'DelayedMatrixStats',
+                       'limma', 'lme4', 'S4Vectors', 'SingleCellExperiment',
+                       'SummarizedExperiment', 'batchelor', 'Matrix.utils',
+                       'HDF5Array', 'terra', 'ggrastr'))
+
+install.packages("devtools")
+devtools::install_github('cole-trapnell-lab/monocle3')
+
+# Load required packages and setting seed
+rm(list = ls())
+library(dplyr)
+library(tidyverse)
+library(Seurat)
+library(cowplot)
+library(monocle3)
+library(ggplot2)
+library(mgcv)
+library(parallel)
+library(future)
+library(pheatmap)
+library(data.table)
+library(readxl)
+set.seed(1)
+
+# Load and read P15 RDS file into a Seurat object
+P15_integrated <- CreateSeuratObject(counts = GetAssayData(readRDS("GSE142787_P15.rds")[["RNA"]], slot = "data"), project = "Tm_TmY_P15_DEGs")
+Idents(P15_integrated) <- "P15"
+P15_integrated@meta.data$orig.ident <- rep("P15",nrow(P15_integrated@meta.data))
+
+# Quality control
+View(P15_integrated@meta.data)
+
+# Reading mitochondrial values
+P15_integrated[["percent.mt"]] <- PercentageFeatureSet(P15_integrated, pattern = "^mt:")
+View(P15_integrated@meta.data)
+
+VlnPlot(P15_integrated, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+FeatureScatter(P15_integrated, feature1 = "nCount_RNA", feature2 = "nFeature_RNA") +
+  geom_smooth(method = 'lm')
+
+# Filtering low quality cells
+P15_integrated <- subset(P15_integrated, subset = nCount_RNA <= 1.7e5 & percent.mt < 5)
+
+# Normalize data
+P15_integrated <- NormalizeData(P15_integrated)
+
+# Identify highly variable features
+P15_integrated <- FindVariableFeatures(P15_integrated, selection.method = "vst")
+
+# Identify the 10 most highly variable genes
+top10 <- head(VariableFeatures(P15_integrated), 10)
+
+# Plot variable features with and without labels
+plot1 <- VariableFeaturePlot(P15_integrated)
+LabelPoints(plot = plot1, points = top10, repel = TRUE)
+
+# Scaling data
+all.genes <- rownames(P15_integrated)
+P15_integrated <- ScaleData(P15_integrated, features = all.genes)
