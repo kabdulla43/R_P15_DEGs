@@ -1,0 +1,21 @@
+# Load and read P15 RDS file
+P15_integrated <- readRDS("P15_integrated.rds")
+
+# Assignment of Tm/TmY clusters
+Tm <- WhichCells(P15_integrated, idents = c(34,55,61,104,118,125,126,140,227,228)) #adjustable parameters
+TmY <- WhichCells(P15_integrated, idents = c(42,70,119,159)) #adjustable pa-rameters
+P15_integrated <- SetIdent(P15_integrated, cells = Tm, value = 260)
+P15_integrated <- SetIdent(P15_integrated, cells = TmY, value = 261)
+table(P15_integrated@active.ident)
+
+# Print results
+markers <- FindMarkers(P15_integrated, ident.1 = 260, ident.2 = 261)
+write.csv(markers, file = "Tm_markers.csv")
+
+#Violin plots of DEGs
+P15_Tm_TmY <- subset(x = P15_integrated, subset = FinalIdents ==
+              c("34","55","61","104","118","125","126","140","227","228","42","70","119","159"))
+P15_Tm_TmY_copy <- P15_Tm_TmY
+my_levels <- c("34","55","61","104","118","125","126","140","227","228","42","70","119","159") #ordering Tm then TmY clusters
+Idents(P15_Tm_TmY_copy) <- factor(Idents(P15_Tm_TmY_copy), levels= my_levels)
+VlnPlot(P15_Tm_TmY_copy, features = c("Rph","kirre")) #insert gene of interest here
